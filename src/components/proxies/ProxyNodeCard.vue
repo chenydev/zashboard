@@ -5,6 +5,7 @@
       twMerge(
         'bg-base-200 flex cursor-pointer flex-col items-start rounded-md hover:shadow-sm',
         active ? 'bg-primary sm:hover:bg-primary/95' : 'sm:hover:bg-base-300/50',
+        highlighted && !active ? 'ring-primary/70 ring-2 ring-offset-1 ring-offset-base-100' : '',
         isSmallCard ? 'gap-1 p-1' : 'gap-2 p-2',
         latencyTipAnimationClass,
       )
@@ -67,7 +68,9 @@ const { t } = useI18n()
 const props = defineProps<{
   name: string
   active?: boolean
+  highlighted?: boolean
   groupName?: string
+  autoScrollOnActive?: boolean
 }>()
 
 const cardRef = ref()
@@ -119,7 +122,7 @@ const handlerLatencyTest = async () => {
 }
 
 onMounted(() => {
-  if (props.active) {
+  if (props.active && props.autoScrollOnActive !== false) {
     setTimeout(() => {
       scrollIntoCenter(cardRef.value)
     }, 300)

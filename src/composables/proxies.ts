@@ -2,10 +2,10 @@ import { isSingBox } from '@/api'
 import { GLOBAL, PROXY_TAB_TYPE } from '@/constant'
 import { isHiddenGroup } from '@/helper'
 import { configs } from '@/store/config'
+import { nodeGroupNames, policyGroupNames } from './proxyGroups'
 import {
   getProxyGroupChains,
   proxiesTabShow,
-  proxyGroupList,
   proxyMap,
   proxyProviederList,
 } from '@/store/proxies'
@@ -41,6 +41,10 @@ const getRenderProxyGroups = () => {
     return []
   }
 
+  if (proxiesTabShow.value === PROXY_TAB_TYPE.NODE) {
+    return filterProxyGroups(nodeGroupNames.value)
+  }
+
   if (displayGlobalByMode.value) {
     if (configs.value?.mode.toUpperCase() === GLOBAL) {
       const globalName =
@@ -49,10 +53,10 @@ const getRenderProxyGroups = () => {
       return filterProxyGroups(getProxyGroupChains(globalName), false)
     }
 
-    return filterProxyGroups(proxyGroupList.value)
+    return filterProxyGroups(policyGroupNames.value)
   }
 
-  return filterProxyGroups([...proxyGroupList.value, GLOBAL])
+  return filterProxyGroups([...policyGroupNames.value, GLOBAL])
 }
 
 const getRenderProxyProviders = () => {

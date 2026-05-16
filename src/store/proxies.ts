@@ -38,7 +38,7 @@ import {
 import { initSmartWeights } from './smart'
 
 export const proxiesFilter = ref('')
-export const proxiesTabShow = ref(PROXY_TAB_TYPE.PROXIES)
+export const proxiesTabShow = ref(PROXY_TAB_TYPE.POLICY)
 
 export const proxyGroupList = ref<string[]>([])
 export const proxyMap = ref<Record<string, Proxy>>({})

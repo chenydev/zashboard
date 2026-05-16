@@ -5,10 +5,15 @@ import { computed } from 'vue'
 import ProxyNodeCard from './ProxyNodeCard.vue'
 import ProxyNodeGrid from './ProxyNodeGrid.vue'
 
+const emit = defineEmits<{
+  select: [nodeName: string]
+}>()
+
 const props = defineProps<{
   name: string
   now?: string
   renderProxies: string[]
+  highlightedName?: string
 }>()
 
 const { maxProxies } = useCalculateMaxProxies(
@@ -16,6 +21,11 @@ const { maxProxies } = useCalculateMaxProxies(
   props.renderProxies.indexOf(props.now ?? ''),
 )
 const proxies = computed(() => props.renderProxies.slice(0, maxProxies.value))
+
+const selectProxy = (nodeName: string) => {
+  emit('select', nodeName)
+  handlerProxySelect(props.name, nodeName)
+}
 </script>
 
 <template>
@@ -26,7 +36,8 @@ const proxies = computed(() => props.renderProxies.slice(0, maxProxies.value))
       :name="node"
       :group-name="name"
       :active="node === now"
-      @click.stop="handlerProxySelect(name, node)"
+      :highlighted="node === highlightedName"
+      @click.stop="selectProxy(node)"
     />
   </ProxyNodeGrid>
 </template>

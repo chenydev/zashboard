@@ -67,7 +67,8 @@ const renderPageItems = renderProxiesPageItems
 const proxiesRef = ref()
 const scrollStatus = useSessionStorage('cache/proxies-scroll-status', {
   [PROXY_TAB_TYPE.PROVIDER]: 0,
-  [PROXY_TAB_TYPE.PROXIES]: 0,
+  [PROXY_TAB_TYPE.POLICY]: 0,
+  [PROXY_TAB_TYPE.NODE]: 0,
 })
 
 const handleScroll = () => {

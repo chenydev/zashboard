@@ -59,12 +59,19 @@
       />
     </template>
     <template v-slot:content>
-      <Component
-        :is="groupProxiesByProvider ? ProxiesByProvider : ProxiesContent"
-        :name="name"
-        :now="proxyGroup.now"
-        :render-proxies="renderProxies"
-      />
+      <div class="flex flex-col gap-0">
+        <Component
+          :is="groupProxiesByProvider ? ProxiesByProvider : ProxiesContent"
+          :name="name"
+          :now="proxyGroup.now"
+          :render-proxies="renderProxies"
+          @select="handleContentSelect"
+        />
+        <ProxyPenetrationSection
+          ref="penetrationSectionRef"
+          :group-name="name"
+        />
+      </div>
     </template>
   </CollapseCard>
 </template>
@@ -72,6 +79,7 @@
 <script setup lang="ts">
 import { useBounceOnVisible } from '@/composables/bouncein'
 import { useRenderProxyList } from '@/composables/renderProxies'
+import { getChildProxyGroupNames } from '@/composables/proxyGroups'
 import { isHiddenGroup } from '@/helper'
 import { checkTruncation } from '@/helper/tooltip'
 import { prettyBytesHelper } from '@/helper/utils'
@@ -98,6 +106,7 @@ import ProxiesContent from './ProxiesContent.vue'
 import ProxyGroupFilter from './ProxyGroupFilter.vue'
 import ProxyGroupNow from './ProxyGroupNow.vue'
 import ProxyName from './ProxyName.vue'
+import ProxyPenetrationSection from './ProxyPenetrationSection.vue'
 import ProxyPreview from './ProxyPreview.vue'
 
 const props = defineProps<{
@@ -136,6 +145,16 @@ const hiddenGroup = computed({
 
 const handlerGroupToggle = () => {
   hiddenGroup.value = !hiddenGroup.value
+}
+
+const penetrationSectionRef = ref<InstanceType<typeof ProxyPenetrationSection> | null>(null)
+
+const handleContentSelect = async (nodeName: string) => {
+  if (!getChildProxyGroupNames(props.name).includes(nodeName)) {
+    return
+  }
+
+  await penetrationSectionRef.value?.openToChildGroup(nodeName, { selectParent: false })
 }
 
 useBounceOnVisible()
