@@ -6,11 +6,11 @@
     <button
       class="btn btn-sm min-w-24 gap-1.5"
       :class="[
-        isExpanded && canPenetrate ? 'btn-neutral' : 'btn-outline',
-        !canPenetrate && 'text-base-content/50 border-base-300',
+        isExpanded && canOpenStrategyChain ? 'btn-neutral' : 'btn-outline',
+        !canOpenStrategyChain && 'text-base-content/50 border-base-300',
       ]"
-      :disabled="!canPenetrate"
-      @click="togglePenetration"
+      :disabled="!canOpenStrategyChain"
+      @click="toggleStrategyChain"
     >
       <span>{{ buttonLabel }}</span>
       <ChevronDownIcon
@@ -20,46 +20,26 @@
     </button>
 
     <div
-      v-if="isExpanded && canPenetrate"
+      v-if="isExpanded && canOpenStrategyChain"
       class="border-primary/45 bg-base-100 mt-2 overflow-hidden rounded-lg border shadow-sm"
     >
       <div class="bg-base-100/95 border-base-300/60 sticky top-0 z-10 border-b px-3 py-2 backdrop-blur">
         <div class="flex min-w-0 flex-wrap items-center gap-2">
           <button
             class="btn btn-xs"
-            :disabled="path.length <= 1"
+            :disabled="currentPathIndex <= 0"
             @click="goParent"
           >
             {{ $t('backToParent') }}
           </button>
           <button
             class="btn btn-xs"
-            :disabled="path.length <= 1"
+            :disabled="currentPathIndex <= 0"
             @click="goRoot"
           >
             {{ $t('backToRoot') }}
           </button>
           <div class="flex-1" />
-          <div class="bg-base-200/80 inline-flex items-center gap-1 rounded-md p-1">
-            <button
-              class="rounded-md px-3 py-1 text-xs leading-5 font-medium transition-colors"
-              :class="penetrationMode === 'stepwise'
-                ? 'bg-base-100 text-base-content shadow-sm'
-                : 'text-base-content/55 hover:text-base-content cursor-pointer'"
-              @click="penetrationMode = 'stepwise'"
-            >
-              {{ $t('stepwisePenetration') }}
-            </button>
-            <button
-              class="rounded-md px-3 py-1 text-xs leading-5 font-medium transition-colors"
-              :class="penetrationMode === 'full'
-                ? 'bg-base-100 text-base-content shadow-sm'
-                : 'text-base-content/55 hover:text-base-content cursor-pointer'"
-              @click="expandToDeepest"
-            >
-              {{ $t('fullExpansion') }}
-            </button>
-          </div>
         </div>
 
         <div
@@ -67,22 +47,22 @@
           class="text-base-content/70 mt-2 flex min-w-0 flex-wrap items-center gap-1 text-xs"
         >
           <template
-            v-for="(name, index) in path"
+            v-for="(name, index) in fullPath"
             :key="`${name}-${index}`"
           >
             <button
               class="rounded px-2 py-1"
               :class="
-                index === path.length - 1
+                index === currentPathIndex
                   ? 'bg-primary text-primary-content font-medium'
                   : 'bg-base-200/70 hover:bg-base-300 cursor-pointer'
               "
-              @click="path = path.slice(0, index + 1)"
+              @click="currentGroupName = name"
             >
               {{ name }}
             </button>
             <span
-              v-if="index < path.length - 1"
+              v-if="index < fullPath.length - 1"
               class="text-base-content/35"
             >
               &gt;
@@ -99,7 +79,7 @@
         </div>
 
         <section
-          v-if="childGroups.length"
+          v-if="childStrategyGroups.length"
           class="mb-4"
         >
           <div class="text-base-content/60 mb-2 text-xs font-medium">
@@ -107,11 +87,11 @@
           </div>
           <div class="grid min-w-0 gap-2 md:grid-cols-2">
             <button
-              v-for="name in childGroups"
+              v-for="name in childStrategyGroups"
               :key="name"
               class="border-base-300/70 bg-base-200 hover:bg-base-300 flex min-w-0 items-center gap-2 rounded-md border px-3 py-2 text-left transition-colors"
               :class="name === currentGroup?.now && 'ring-primary/70 ring-2 ring-offset-1 ring-offset-base-100'"
-              @click="enterChildGroup(name)"
+              @click="enterChildStrategyGroup(name)"
             >
               <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ name }}</span>
               <span class="text-base-content/45 shrink-0 text-xs">{{ proxyMap[name]?.type }}</span>
@@ -153,7 +133,6 @@ import { getChildProxyGroupNames, getDescendantProxyGroupNames } from '@/composa
 import { findScrollableParent } from '@/helper/utils'
 import { handlerProxySelect, proxyMap } from '@/store/proxies'
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
-import { useStorage } from '@vueuse/core'
 import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ProxyNodeCard from './ProxyNodeCard.vue'
@@ -163,43 +142,32 @@ const props = defineProps<{
   groupName: string
 }>()
 
-type PenetrationMode = 'stepwise' | 'full'
-
 const { t } = useI18n()
 const sectionRef = ref<HTMLElement>()
 const chainRef = ref<HTMLElement>()
 const isExpanded = ref(false)
-const path = ref<string[]>([props.groupName])
-const penetrationModeMap = useStorage<Record<string, PenetrationMode>>(
-  'cache/proxy-penetration-mode-map',
-  {},
-)
-const penetrationMode = computed<PenetrationMode>({
-  get: () => penetrationModeMap.value[props.groupName] ?? 'stepwise',
-  set: (value) => {
-    penetrationModeMap.value[props.groupName] = value
-  },
-})
+const fullPath = ref<string[]>([props.groupName])
+const currentGroupName = ref(props.groupName)
 
-const currentGroupName = computed(() => path.value[path.value.length - 1] ?? props.groupName)
 const currentGroup = computed(() => proxyMap.value[currentGroupName.value])
+const currentPathIndex = computed(() => fullPath.value.indexOf(currentGroupName.value))
 const allProxies = computed(() => currentGroup.value?.all ?? [])
 const { renderProxies } = useRenderProxyList(allProxies, currentGroupName.value)
-const childGroups = computed(() => getChildProxyGroupNames(currentGroupName.value))
+const childStrategyGroups = computed(() => getChildProxyGroupNames(currentGroupName.value))
 const nodeProxies = computed(() =>
-  renderProxies.value.filter((name) => !childGroups.value.includes(name)),
+  renderProxies.value.filter((name) => !childStrategyGroups.value.includes(name)),
 )
-const childGroupCount = computed(() => getDescendantProxyGroupNames(props.groupName).length)
-const canPenetrate = computed(() => childGroupCount.value > 0)
+const strategyChainGroupCount = computed(() => getDescendantProxyGroupNames(props.groupName).length)
+const canOpenStrategyChain = computed(() => strategyChainGroupCount.value > 0)
 
 const buttonLabel = computed(() => {
-  if (!canPenetrate.value) {
-    return t('noPenetrableProxyGroup')
+  if (!canOpenStrategyChain.value) {
+    return t('noStrategyChainGroup')
   }
 
   return isExpanded.value
-    ? t('collapsePenetration')
-    : `${t('strategyPenetration')} ${childGroupCount.value}`
+    ? t('collapseStrategyChain')
+    : `${t('strategyChain')} ${strategyChainGroupCount.value}`
 })
 
 const getNextGroupName = (groupName: string) => {
@@ -233,6 +201,11 @@ const buildDeepestPath = () => {
   return nextPath
 }
 
+const setFullPath = (nextPath: string[], currentName?: string) => {
+  fullPath.value = nextPath.length ? nextPath : [props.groupName]
+  currentGroupName.value = currentName ?? fullPath.value[fullPath.value.length - 1] ?? props.groupName
+}
+
 const forceScrollIntoCenter = (el: HTMLElement) => {
   const scrollableParent = findScrollableParent(el)
 
@@ -262,8 +235,8 @@ const scrollToSection = async () => {
   }
 }
 
-const togglePenetration = async () => {
-  if (!canPenetrate.value) {
+const toggleStrategyChain = async () => {
+  if (!canOpenStrategyChain.value) {
     isExpanded.value = false
     return
   }
@@ -271,38 +244,30 @@ const togglePenetration = async () => {
   isExpanded.value = !isExpanded.value
 
   if (isExpanded.value) {
-    path.value = buildDeepestPath().slice(0, 2)
+    setFullPath(buildDeepestPath())
     await scrollToSection()
   }
 }
 
-const enterChildGroup = async (name: string) => {
+const enterChildStrategyGroup = async (name: string) => {
   await handlerProxySelect(currentGroupName.value, name)
-  path.value = [...path.value, name]
-  penetrationMode.value = 'stepwise'
+  setFullPath(buildDeepestPath())
   await scrollToSection()
 }
 
 const goParent = () => {
-  if (path.value.length <= 1) {
+  if (currentPathIndex.value <= 0) {
     return
   }
 
-  path.value = path.value.slice(0, -1)
-  penetrationMode.value = 'stepwise'
+  currentGroupName.value = fullPath.value[currentPathIndex.value - 1] ?? props.groupName
 }
 
 const goRoot = () => {
-  path.value = [props.groupName]
-  penetrationMode.value = 'stepwise'
+  currentGroupName.value = props.groupName
 }
 
-const expandToDeepest = () => {
-  path.value = buildDeepestPath()
-  penetrationMode.value = 'full'
-}
-
-const openToChildGroup = async (name: string, options?: { selectParent?: boolean }) => {
+const openToChildStrategyGroup = async (name: string, options?: { selectParent?: boolean }) => {
   if (!getChildProxyGroupNames(props.groupName).includes(name)) {
     return false
   }
@@ -311,9 +276,23 @@ const openToChildGroup = async (name: string, options?: { selectParent?: boolean
     await handlerProxySelect(props.groupName, name)
   }
 
-  path.value = [props.groupName, name]
+  setFullPath(buildDeepestPath())
   isExpanded.value = true
-  penetrationMode.value = 'stepwise'
+  await scrollToSection()
+
+  return true
+}
+
+const openToStrategyGroupInPath = async (name: string) => {
+  const nextPath = buildDeepestPath()
+  const targetIndex = nextPath.indexOf(name)
+
+  if (targetIndex <= 0) {
+    return false
+  }
+
+  setFullPath(nextPath, name)
+  isExpanded.value = true
   await scrollToSection()
 
   return true
@@ -322,18 +301,20 @@ const openToChildGroup = async (name: string, options?: { selectParent?: boolean
 watch(
   () => props.groupName,
   (groupName) => {
-    path.value = [groupName]
+    fullPath.value = [groupName]
+    currentGroupName.value = groupName
     isExpanded.value = false
   },
 )
 
-watch(canPenetrate, (value) => {
+watch(canOpenStrategyChain, (value) => {
   if (!value) {
     isExpanded.value = false
   }
 })
 
 defineExpose({
-  openToChildGroup,
+  openToChildStrategyGroup,
+  openToStrategyGroupInPath,
 })
 </script>

@@ -17,5 +17,7 @@ Read this file first after `llmdoc/index.md`.
 This working tree tracks upstream zashboard and carries a small local feature set from AnGe-ClashBoard:
 
 - policy group and node group split tabs
-- strategy penetration inside proxy groups
+- strategy chain inside proxy groups
 - no AnGe server dependency, auth relay, or backend service requirement
+
+The long-lived local branch name is `local/personal-optimizations`.

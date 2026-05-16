@@ -1,6 +1,7 @@
 import { GLOBAL, PROXY_TAB_TYPE } from '@/constant'
 import { isHiddenGroup } from '@/helper'
 import { proxyGroupList, proxyMap, proxyProviederList } from '@/store/proxies'
+import { rules } from '@/store/rules'
 import { manageHiddenGroup } from '@/store/settings'
 import { computed } from 'vue'
 
@@ -49,12 +50,22 @@ const referencedProxyGroupNames = computed(() => {
   return referenced
 })
 
+const ruleProxyGroupNames = computed(() => {
+  const groupSet = new Set(proxyGroupList.value)
+
+  return new Set(rules.value.map((rule) => rule.proxy).filter((name) => groupSet.has(name)))
+})
+
 export const policyGroupNames = computed(() =>
-  proxyGroupList.value.filter((name) => !referencedProxyGroupNames.value.has(name)),
+  proxyGroupList.value.filter(
+    (name) => !referencedProxyGroupNames.value.has(name) || ruleProxyGroupNames.value.has(name),
+  ),
 )
 
 export const nodeGroupNames = computed(() =>
-  proxyGroupList.value.filter((name) => referencedProxyGroupNames.value.has(name)),
+  proxyGroupList.value.filter(
+    (name) => referencedProxyGroupNames.value.has(name) && !ruleProxyGroupNames.value.has(name),
+  ),
 )
 
 const getCountableProxyGroupNames = (names: string[]) => {

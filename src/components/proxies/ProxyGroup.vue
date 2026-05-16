@@ -43,7 +43,11 @@
       </div>
       <div class="text-base-content/80 mt-1.5 flex items-center gap-2">
         <div class="flex flex-1 items-center gap-2 truncate text-sm">
-          <ProxyGroupNow :name="name" />
+          <ProxyGroupNow
+            :name="name"
+            chain-click-mode="strategy-chain"
+            @chain-click="handleChainClick"
+          />
         </div>
         <div class="min-w-12 shrink-0 text-right text-xs">
           {{ prettyBytesHelper(downloadTotal) }}/s
@@ -67,8 +71,8 @@
           :render-proxies="renderProxies"
           @select="handleContentSelect"
         />
-        <ProxyPenetrationSection
-          ref="penetrationSectionRef"
+        <ProxyStrategyChainSection
+          ref="strategyChainSectionRef"
           :group-name="name"
         />
       </div>
@@ -95,10 +99,11 @@ import {
   manageHiddenGroup,
   proxyGroupIconMargin,
   proxyGroupIconSize,
+  collapseGroupMap,
 } from '@/store/settings'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { twMerge } from 'tailwind-merge'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import CollapseCard from '../common/CollapseCard.vue'
 import LatencyTag from './LatencyTag.vue'
 import ProxiesByProvider from './ProxiesByProvider.vue'
@@ -106,7 +111,7 @@ import ProxiesContent from './ProxiesContent.vue'
 import ProxyGroupFilter from './ProxyGroupFilter.vue'
 import ProxyGroupNow from './ProxyGroupNow.vue'
 import ProxyName from './ProxyName.vue'
-import ProxyPenetrationSection from './ProxyPenetrationSection.vue'
+import ProxyStrategyChainSection from './ProxyStrategyChainSection.vue'
 import ProxyPreview from './ProxyPreview.vue'
 
 const props = defineProps<{
@@ -147,14 +152,21 @@ const handlerGroupToggle = () => {
   hiddenGroup.value = !hiddenGroup.value
 }
 
-const penetrationSectionRef = ref<InstanceType<typeof ProxyPenetrationSection> | null>(null)
+const strategyChainSectionRef = ref<InstanceType<typeof ProxyStrategyChainSection> | null>(null)
 
 const handleContentSelect = async (nodeName: string) => {
   if (!getChildProxyGroupNames(props.name).includes(nodeName)) {
     return
   }
 
-  await penetrationSectionRef.value?.openToChildGroup(nodeName, { selectParent: false })
+  await strategyChainSectionRef.value?.openToChildStrategyGroup(nodeName, { selectParent: false })
+}
+
+const handleChainClick = async (groupName: string) => {
+  collapseGroupMap.value[props.name] = true
+  await nextTick()
+
+  await strategyChainSectionRef.value?.openToStrategyGroupInPath(groupName)
 }
 
 useBounceOnVisible()

@@ -17,7 +17,7 @@
           @click="close"
         />
 
-        <!-- 弹层内容，阻止点击穿透 -->
+        <!-- 弹层内容，阻止点击透传 -->
         <div
           ref="modalBoxRef"
           class="modal-box bg-base-100 relative overflow-hidden p-0 outline-none"

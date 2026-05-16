@@ -27,5 +27,5 @@
 ## Memory
 
 - Reflections live in `memory/reflections/`.
-- [2026-05-16 AnGe policy tabs and penetration](memory/reflections/2026-05-16-ange-policy-tabs-penetration.md)
+- [2026-05-16 AnGe policy tabs and strategy chain](memory/reflections/2026-05-16-ange-policy-tabs-strategy-chain.md)
 - Decisions live in `memory/decisions/`.

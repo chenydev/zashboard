@@ -21,33 +21,38 @@ Search mode is handled by `src/composables/proxySearch.ts` and settings in `src/
 Keep local AnGe-derived features frontend-only:
 
 - split proxy display into policy groups and node groups
-- render nested strategy penetration from existing `proxyMap` and group members
-- avoid server-side AnGe rule penetration APIs, auth store, and server relay
+- render nested strategy chain from existing `proxyMap` and group members
+- avoid server-side AnGe rule strategy-chain APIs, auth store, and server relay
 
 ## Local Feature Files
 
 - `src/composables/proxyGroups.ts` classifies policy groups and node groups from the existing proxy graph.
-- `src/components/proxies/ProxyPenetrationSection.vue` renders stepwise/full strategy penetration for a policy group.
+- Groups directly referenced by rules are classified as policy groups even when other groups also reference them.
+- `src/components/proxies/ProxyStrategyChainSection.vue` renders strategy chain for a policy group.
 - Node groups reuse the same `ProxyGroup` / `ProxyGroupForMobile` card layout as policy groups instead of a special grouped-row layout.
 - Proxy tab counts should match the visible group filtering rules. Hidden groups are not counted unless `manageHiddenGroup` is enabled.
 
-## Strategy Penetration Interaction
+## Strategy Chain Interaction
 
-Strategy penetration now uses an inline panel instead of stacking full proxy-group cards.
+Strategy chain now uses an inline panel instead of stacking full proxy-group cards.
 
-- The penetration button is disabled when no child group exists; no empty panel is opened in that case.
-- Closed button text shows the number of penetrable descendant groups.
-- The panel has a sticky header with path, back-to-parent, back-to-root, stepwise, and full-expansion controls.
+- The strategy-chain button is disabled when no child group exists; no empty panel is opened in that case.
+- Closed button text shows the number of child strategy groups.
+- The panel has a sticky header with full group-chain path, back-to-parent, and back-to-root controls.
 - The current layer is rendered as a scoped view with a visible left accent border.
 - Child strategy groups and proxy nodes are separated into distinct sections.
-- Opening penetration starts at the first penetrable child layer, not the current parent layer, to avoid an extra click.
-- Selecting a child strategy group auto-opens penetration if needed, switches the panel to that layer, and selects it in the parent group.
-- Returning to parent/root is the way to inspect higher layers.
-- Full expansion follows the current selected group chain, falling back to the first child group until the deepest layer.
+- Opening the strategy chain shows the full current selected group chain immediately and focuses the deepest group.
+- Selecting a child strategy group auto-opens the strategy chain if needed, selects it in the parent group, recomputes the full selected chain, and focuses the deepest group.
+- Group card summaries display the current selected strategy-group chain and the final selected proxy node.
+- Long summary chains are compressed to first item, ellipsis, and final item, with the full chain in the title.
+- The summary expansion button opens the strategy-chain panel at the deepest current group.
+- Clicking a strategy-group item in the desktop chain summary opens the strategy-chain panel and positions it at that chain layer.
+- Clicking any group in the strategy-chain panel path switches the scoped content to that group while preserving the full path display.
+- Returning to parent/root switches the focused layer without truncating the full path.
 
 ## Low-Conflict Extension Points
 
-Use dedicated local files for classification and penetration logic. Then integrate with narrow edits:
+Use dedicated local files for classification and strategy-chain logic. Then integrate with narrow edits:
 
 - add enum values in `src/constant/index.ts`
 - map tab labels in i18n files
