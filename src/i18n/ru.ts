@@ -204,7 +204,6 @@ const ru: LANG_MESSAGE = {
   searchProxyNode: 'Поиск узлов прокси',
   proxySearchModeGlobal: 'Поиск узлов',
   proxySearchModeGroup: 'Поиск групп политик',
-  searchMultiple: 'Ключевые слова через пробелы',
   importing: 'Импортируется',
   hideConnection: 'Скрыть соединение',
   showConnection: 'Показать соединение',

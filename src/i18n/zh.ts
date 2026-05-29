@@ -202,7 +202,6 @@ const zh: LANG_MESSAGE = {
   searchProxyNode: '搜索节点',
   proxySearchModeGlobal: '节点搜索',
   proxySearchModeGroup: '策略组搜索',
-  searchMultiple: '多个关键词用空格分隔',
   importing: '正在导入',
   hideConnection: '隐藏连接',
   showConnection: '显示连接',
