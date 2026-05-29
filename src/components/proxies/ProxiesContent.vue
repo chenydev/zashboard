@@ -22,9 +22,9 @@ const { maxProxies } = useCalculateMaxProxies(
 )
 const proxies = computed(() => props.renderProxies.slice(0, maxProxies.value))
 
-const selectProxy = (nodeName: string) => {
+const selectProxy = async (nodeName: string) => {
+  await handlerProxySelect(props.name, nodeName)
   emit('select', nodeName)
-  handlerProxySelect(props.name, nodeName)
 }
 </script>
 

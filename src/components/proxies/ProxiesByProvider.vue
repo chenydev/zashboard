@@ -77,9 +77,9 @@ const truncatedProxies = computed(() => {
   return truncatedProxies
 })
 
-const selectProxy = (nodeName: string) => {
+const selectProxy = async (nodeName: string) => {
+  await handlerProxySelect(props.name, nodeName)
   emit('select', nodeName)
-  handlerProxySelect(props.name, nodeName)
 }
 </script>
 
