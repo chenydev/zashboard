@@ -29,3 +29,6 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# llmdoc local temporary context cache (not a source of truth)
+.llmdoc-tmp/

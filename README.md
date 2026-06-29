@@ -20,6 +20,19 @@ You can access the online zashboard at the following link:
 
 - [Online zashboard](http://board.zash.run.place)
 
+## **Local fork features**
+
+This fork keeps upstream zashboard as the base and carries a small local optimization set. The proxy-page feature direction is inspired by [AnGe-ClashBoard](https://github.com/liandu2024/AnGe-ClashBoard), with local interaction and maintenance-focused adjustments:
+
+- split proxy groups into policy groups and node groups
+- keep proxy providers as a separate tab
+- show the selected strategy chain for policy groups, including the final selected proxy node
+- open a local strategy-chain panel for nested strategy groups
+
+Compared with the AnGe implementation, this branch keeps the feature frontend-only, uses zashboard's existing Clash API data, improves the strategy-chain interaction, and avoids importing AnGe server, auth, or relay code.
+
+Local releases are tagged as `v<upstream-zashboard-version>-local.<number>` and include `dist-cdn-fonts.zip` and `dist-no-fonts.zip` for Clash external UI usage.
+
 ## **Download**
 
 You can download the zashboard files here:

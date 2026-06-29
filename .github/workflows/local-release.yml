@@ -1,0 +1,64 @@
+name: Local Release
+
+on:
+  push:
+    branches:
+      - local/personal-optimizations
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - name: Resolve local tag
+        id: tag
+        shell: bash
+        run: |
+          base_version="$(node -p "require('./package.json').version")"
+          prefix="v${base_version}-local."
+          latest="$(
+            git tag --list "${prefix}*" |
+              sed -E "s/^${prefix//./\\.}([0-9]+)$/\\1/" |
+              sort -n |
+              tail -n 1
+          )"
+
+          if [[ -z "$latest" ]]; then
+            next=1
+          else
+            next=$((latest + 1))
+          fi
+
+          tag="${prefix}${next}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Build release archives
+        run: |
+          pnpm run build:cdn-fonts
+          zip -r dist-cdn-fonts.zip dist
+          pnpm run build:no-fonts
+          zip -r dist-no-fonts.zip dist
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.tag.outputs.tag }}
+        run: |
+          gh release create "$TAG_NAME" dist-cdn-fonts.zip dist-no-fonts.zip \
+            --target "$GITHUB_SHA" \
+            --title "$TAG_NAME" \
+            --notes "Local zashboard release based on upstream v$(node -p "require('./package.json').version")."
