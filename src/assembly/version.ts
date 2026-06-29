@@ -97,6 +97,78 @@ interface CacheEntry<T> {
   data: T
 }
 
+// 本地 fork 升级检查:优先查 fork release(chenydev/zashboard),失败再回退上游。
+// 详见 llmdoc reflection 的 "UI upgrade consistency follow-up"。
+type GitHubRelease = {
+  tag_name?: string
+  target_commitish?: string
+}
+
+const UPSTREAM_UI_RELEASES_API = 'https://api.github.com/repos/Zephyruso/zashboard/releases/latest'
+const LOCAL_UI_RELEASES_API = 'https://api.github.com/repos/chenydev/zashboard/releases/latest'
+const currentUITag = `v${zashboardVersion.value}`
+
+const parseReleaseTag = (tag: string) => {
+  const match = /^v?(\d+)\.(\d+)\.(\d+)(?:-local\.(\d+))?$/.exec(tag.trim())
+
+  if (!match) {
+    return null
+  }
+
+  return {
+    major: Number.parseInt(match[1], 10),
+    minor: Number.parseInt(match[2], 10),
+    patch: Number.parseInt(match[3], 10),
+    local: match[4] ? Number.parseInt(match[4], 10) : -1,
+  }
+}
+
+const compareReleaseTags = (left: string, right: string) => {
+  const leftTag = parseReleaseTag(left)
+  const rightTag = parseReleaseTag(right)
+
+  if (!leftTag || !rightTag) {
+    return left.trim().localeCompare(right.trim())
+  }
+
+  if (leftTag.major !== rightTag.major) {
+    return leftTag.major - rightTag.major
+  }
+
+  if (leftTag.minor !== rightTag.minor) {
+    return leftTag.minor - rightTag.minor
+  }
+
+  if (leftTag.patch !== rightTag.patch) {
+    return leftTag.patch - rightTag.patch
+  }
+
+  return leftTag.local - rightTag.local
+}
+
+const isCurrentUIReleaseCommit = (targetCommitish: string) => {
+  const currentCommitId = __COMMIT_ID__.trim()
+  const normalizedTarget = targetCommitish.trim()
+
+  if (!currentCommitId || !normalizedTarget) {
+    return false
+  }
+
+  return normalizedTarget.startsWith(currentCommitId) || currentCommitId.startsWith(normalizedTarget)
+}
+
+const fetchLatestRelease = async (url: string) => {
+  return await fetchWithLocalCache<GitHubRelease>(url, zashboardVersion.value)
+}
+
+const hasNewerRelease = (tagName: string) => {
+  if (!tagName) {
+    return false
+  }
+
+  return compareReleaseTags(tagName, currentUITag) > 0
+}
+
 async function fetchWithLocalCache<T>(url: string, version: string): Promise<T> {
   const cacheKey = 'cache/' + url
   const cacheRaw = localStorage.getItem(cacheKey)
@@ -133,12 +205,24 @@ async function fetchWithLocalCache<T>(url: string, version: string): Promise<T> 
 }
 
 export const fetchIsUIUpdateAvailable = async () => {
-  const { tag_name } = await fetchWithLocalCache<{ tag_name: string }>(
-    'https://api.github.com/repos/Zephyruso/zashboard/releases/latest',
-    zashboardVersion.value,
-  )
+  try {
+    const latestLocalRelease = await fetchLatestRelease(LOCAL_UI_RELEASES_API)
+    const localTagName = String(latestLocalRelease.tag_name || '').trim()
 
-  return Boolean(tag_name && tag_name !== `v${zashboardVersion.value}`)
+    if (localTagName) {
+      if (isCurrentUIReleaseCommit(String(latestLocalRelease.target_commitish || ''))) {
+        return false
+      }
+
+      return hasNewerRelease(localTagName)
+    }
+  } catch (error) {
+    console.warn('Failed to check local UI release, fallback to upstream', error)
+  }
+
+  const latestUpstreamRelease = await fetchLatestRelease(UPSTREAM_UI_RELEASES_API)
+
+  return hasNewerRelease(String(latestUpstreamRelease.tag_name || '').trim())
 }
 
 const check = async (url: string, versionNumber: string) => {
