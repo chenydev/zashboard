@@ -23,8 +23,8 @@ zashboard is a Vue 3 + Vite dashboard for Clash-compatible APIs.
 
 - Views live in `src/views/`.
 - Route constants live in `src/constant/index.ts`.
-- API wrappers live in `src/api/`.
-- Global reactive state uses module-level refs in `src/store/`.
+- Backend API calls live in `src/api/`; `src/assembly/` (api/assembly/view refactor) picks the backend, assembles data, and holds reactive proxy/rules/version view-state (e.g. `assembly/proxies`, `assembly/rules`, `assembly/version`).
+- Remaining global UI state (settings, folders, etc.) uses module-level refs in `src/store/`.
 - Proxy page components live in `src/components/proxies/`.
 - Proxy page controls live in `src/components/controls/ProxiesCtrl.tsx`.
 
