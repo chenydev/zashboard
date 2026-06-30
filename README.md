@@ -22,14 +22,13 @@ You can access the online zashboard at the following link:
 
 ## **Local fork features**
 
-This fork keeps upstream zashboard as the base and carries a small local optimization set. The proxy-page feature direction is inspired by [AnGe-ClashBoard](https://github.com/liandu2024/AnGe-ClashBoard), with local interaction and maintenance-focused adjustments:
+This fork keeps upstream zashboard as the base and carries a small, low-conflict optimization set. The proxy-page idea is inspired by [AnGe-ClashBoard](https://github.com/liandu2024/AnGe-ClashBoard), reworked into a modal-based interaction:
 
-- split proxy groups into policy groups and node groups
-- keep proxy providers as a separate tab
-- show the selected strategy chain for policy groups, including the final selected proxy node
-- open a local strategy-chain panel for nested strategy groups
+- **Strategy-chain breadcrumb** on each proxy-group card: shows the full selected chain (current selection → nested strategy groups → final node), with long chains compressed to first / … / last.
+- **Strategy-chain modal**: click the chain or the expand button to open a single drill-in modal that shows a breadcrumb path (jump to any layer, back to parent / root), the current layer's child strategy groups (selecting one follows the chain into it), and the current layer's proxy nodes.
+- Proxy-group categorization (policy vs node) is left to upstream's built-in proxy folders; the fork no longer adds its own tab split.
 
-Compared with the AnGe implementation, this branch keeps the feature frontend-only, uses zashboard's existing Clash API data, improves the strategy-chain interaction, and avoids importing AnGe server, auth, or relay code.
+Compared with the AnGe implementation, this fork keeps the feature frontend-only, derives the chain from zashboard's existing Clash API data, and avoids importing AnGe server, auth, or relay code.
 
 Local releases are tagged as `v<upstream-zashboard-version>-local.<number>` and include `dist-cdn-fonts.zip` and `dist-no-fonts.zip` for Clash external UI usage.
 

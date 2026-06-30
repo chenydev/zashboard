@@ -42,6 +42,7 @@
         />
       </div>
     </div>
+    <ProxyStrategyChainModal />
   </div>
 </template>
 
@@ -52,6 +53,7 @@ import FolderTopBar from '@/components/proxies/folders/FolderTopBar.vue'
 import ProxyGroup from '@/components/proxies/ProxyGroup.vue'
 import ProxyGroupForMobile from '@/components/proxies/ProxyGroupForMobile.vue'
 import ProxyProvider from '@/components/proxies/ProxyProvider.vue'
+import ProxyStrategyChainModal from '@/components/proxies/ProxyStrategyChainModal.vue'
 import { usePaddingForViews } from '@/composables/paddingViews'
 import {
   disableProxiesPageScroll,
