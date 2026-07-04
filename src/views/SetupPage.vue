@@ -199,6 +199,8 @@ const form = reactive({
 
 const showEditModal = ref(false)
 const editingBackendUuid = ref('')
+const isManualSetupRoute = () => router.currentRoute.value.query.setupMode === 'manual'
+const isEditBackendRoute = () => typeof router.currentRoute.value.query.editBackend === 'string'
 
 watch(
   () => router.currentRoute.value.query.editBackend,
@@ -273,7 +275,7 @@ const handleSubmit = async (setupForm: SetupForm, quiet = false) => {
   }
 }
 
-const backend = getBackendFromUrl()
+const backend = isManualSetupRoute() || isEditBackendRoute() ? null : getBackendFromUrl()
 
 if (backend) {
   handleSubmit(backend)
